@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-module
+  type="WEB"
+  name="Spring Boot Tomcat JSP Sample"
+  id="myeclipse.1471794470709"
+  context-root="/SpringBootJspDemo"
+  j2ee-spec="6.0"
+  archive="Spring Boot Tomcat JSP Sample.war">
+  <attributes>
+    <attribute name="webrootdir" value="src/main/webapp" />
+  </attributes>
+</project-module>
+
