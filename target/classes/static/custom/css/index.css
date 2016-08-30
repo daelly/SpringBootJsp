@@ -1,0 +1,13 @@
+.container-body {
+	margin-top: 60px;
+}
+
+.title-text {
+	font-size: 16px;
+	font-weight: 500;
+	margin-right: 25px;
+}
+
+.search-field {
+	float: right;
+}

@@ -11,6 +11,9 @@ jQuery.prototype.serializeObject=function(){
     }  
     return o;  
 };  
+_.templateSettings = {
+   interpolate : /\{\{(.+?)\}\}/g
+};
 var Person = Backbone.Model.extend({
 	urlRoot: '/person/save',
 	initialize: function(){
@@ -23,8 +26,8 @@ var Person = Backbone.Model.extend({
 		});
 	},
 	defaults: {
-		name: '张三',
-		age: 26,
+		name: '',
+		age: 20,
 		sex:false
 	},
 	aboutMe: function(){
@@ -34,14 +37,23 @@ var Person = Backbone.Model.extend({
 	validate: function(attrs){
 		if(attrs.name==''){
 			return "name不能为空！";
-   			}
-   		}
+		}
+	}
 });
 
 var Persons = Backbone.Collection.extend({
+	
+	// 设置从服务器拉取数据的url
 	url: '/person/list',
-    // 设置Collection的模型为Todo
-    model: Person   
+	
+    // 设置Collection的模型为 Person
+    model: Person,
+    
+    renderAll: function(){
+    	return this.map(function(person){
+    		return new PersonView({model:person}).render();
+    	});
+    }
 });
 
 var PersonView = Backbone.View.extend({
@@ -50,12 +62,12 @@ var PersonView = Backbone.View.extend({
     tagName:  "tr",
 
     // 获取一个任务条目的模板,缓存到这个属性上。
-    template: _.template($('#item-template').html()),
+    template: _.template($('#person-template').html()),
 
     // 为每一个任务条目绑定事件
     events: {
         "click a.edit"   : "edit",
-        "click a.delete" : "remove",
+        "click a.delete" : "dropoff",
         "click a.detail" : "detail"
     },
 
@@ -70,30 +82,24 @@ var PersonView = Backbone.View.extend({
     // 渲染todo中的数据到 item-template 中，然后返回对自己的引用this
     render: function() {
         this.$el.html(this.template(this.model.toJSON()));
-        return this;
+        return this.$el;
     },
 
     // 修改任务条目的样式
     edit: function() {
-        $(this.el).addClass("editing");
-        this.input.focus();
+       new PersonEditView({model:this.model}).render();
     },
 
     // 删除项目
-    remove: function() {
-        var value = this.input.val();
-        if (!value) {
-            //无值内容直接从页面清除
-            this.clear();
-        } else {
-            this.model.save({title: value});
-            this.$el.removeClass("editing");
+    dropoff: function() {
+        if(window.confirm("是否确认要删除该数据？")){
+        	this.model.destroy();
         }
     },
 
     // 移除对应条目，以及对应的数据对象
     detail: function() {
-        this.model.destroy();
+        alert(this.model.aboutMe());
     }
 });
 
@@ -103,25 +109,28 @@ var PersonEditView = Backbone.View.extend({
 	el: $("#sub_modal"),
 
     // 获取一个任务条目的模板,缓存到这个属性上。
-    template: _.template($('#item-template').html()),
+    template: _.template($('#edit-person-template').html()),
 
     // 为每一个任务条目绑定事件
     events: {
-        "click button.save" : "save",
+        "click button#save" : "save",
         "click button.cancel" : "cancel"
     },
 
     // 渲染todo中的数据到 item-template 中，然后返回对自己的引用this
     render: function() {
         this.$el.html(this.template(this.model.toJSON()));
+        this.$el.modal("show");
         return this;
     },
 
     // 保存修改，关闭摸态框
     save: function() {
-    	var obj = $el.find("form").serializeObject();
+    	var obj = this.$el.find("form").serializeObject();
+    	console.log(obj);
         this.model.set(obj);
-        $el.modal("hide");
+        this.model.save();
+        this.$el.modal("hide");
     },
 
     // 取消编辑
@@ -129,3 +138,66 @@ var PersonEditView = Backbone.View.extend({
     	$el.modal("hide");
     }
 });
+
+var AppView = Backbone.View.extend({
+
+    //绑定页面上主要的DOM节点
+    el: $("#app"),
+
+    // 绑定dom节点上的事件
+    events: {
+        "click #add": "add",
+        "click #search": "search"
+    },
+
+    // 初始化，从服务器拉取数据
+    initialize: function() {
+       var that = this;
+       this.collection = new Persons();
+       this.collection.fetch({
+    	   url: '/person/list',
+    	   data: this.$el.serializeObject(),
+    	   success: function(datas,resp){
+    		   console.log(datas);
+    		   that.render();
+    	   },
+    	   error: function(){
+    		   alert("error");
+    	   }
+       });
+       this.listenTo(this.collection, 'add', this.render);
+    },
+
+    // 渲染当前collection的元素
+    render: function() {
+    	var tbody = this.$el.find("#dataList");
+    	tbody.empty();
+        var that = this;
+        _.each(that.collection.renderAll(),function(tr){
+        	console.log(tr);
+        	tbody.append(tr);
+        });
+    },
+    
+    add: function() {
+    	var p = new Person();
+    	new PersonEditView({model:p}).render();
+    },
+    
+    search: function() {
+    	var that = this;
+        this.collection.fetch({
+     	   url: '/person/list',
+     	   data: $el.serializeObject(),
+     	   success: function(datas,resp){
+     		   console.log(datas);
+     		   that.render();
+     	   },
+     	   error: function(){
+     		   alert("error");
+     	   }
+        });
+    }
+});
+
+new AppView();

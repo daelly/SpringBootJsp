@@ -18,6 +18,7 @@ import sample.tomcat.jsp.service.IPersonService;
 @Controller
 public class PersonController extends BaseController {
 	
+	
 	@Autowired
 	IPersonService personService;
 	
