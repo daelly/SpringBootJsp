@@ -1,4 +1,5 @@
 require.config({
+	baseUrl: '/lib/requirejs',
 	shim: {
 		'backbone': {
 			deps: ['underscore','jquery'],
@@ -9,10 +10,19 @@ require.config({
 		},
 		'bootstrap': {
 	        deps: ['jquery'],
-	        exports: '$.fn.popover'
+	        exports: '$.fn.modal'
 	    }
+	},
+	paths: {
+		app: '/custom/js',
+		templates: '/custom/templates',
+		'bootstrap': '../bootstrap-3.3.0/js/bootstrap.min',
+		'underscore': '../backbone/underscore-min',
+		'backbone': '../backbone/backbone-min',
+		'jquery': '../jQuery/jquery-1.12.4.min'
 	}
 });
-require([''],function(app){
-	
+
+require(['app/index'],function(app){
+	new app();
 });
